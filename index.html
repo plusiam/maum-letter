@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>정서 4분면 마음 편지</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+        }
+        .quadrant-selected {
+            outline: 4px solid #3b82f6; /* blue-500 */
+            outline-offset: -2px;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+        @media print {
+            body * { visibility: hidden; }
+            #resultSection, #resultSection * { visibility: visible; }
+            #resultSection { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none !important; border: none !important; }
+            .no-print { display: none !important; }
+            #resultCard { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+            
+            /* 기본 인쇄 스타일 (포근한 장미 테마 기준) */
+            .theme-rose #resultCard { background-color: #fff1f2 !important; } /* bg-rose-50 */
+            .theme-rose #resultMainTitle { color: #f43f5e !important; } /* text-rose-500 */
+            .theme-rose #resultMainTitle .emphasized-name { color: #b45309 !important; } /* text-amber-700 */
+
+            /* 차분한 숲 테마 인쇄 (필요시 추가) */
+            .theme-forest #resultCard { background-color: #ecfdf5 !important; } /* bg-emerald-50 */
+            .theme-forest #resultMainTitle { color: #059669 !important; } /* text-emerald-600 */
+            .theme-forest #resultMainTitle .emphasized-name { color: #0f766e !important; } /* text-teal-700 */
+            
+            /* 발랄한 햇살 테마 인쇄 (필요시 추가) */
+            .theme-sunshine #resultCard { background-color: #fffbeb !important; } /* bg-amber-50 */
+            .theme-sunshine #resultMainTitle { color: #f97316 !important; } /* text-orange-500 */
+            .theme-sunshine #resultMainTitle .emphasized-name { color: #f43f5e !important; } /* text-rose-600 */
+
+            /* 공통 인쇄 텍스트 색상 */
+            #resultDate, #resultEmotion, #resultQuadrant, #resultAction, #resultLetter, #resultSection .label-text {
+                color: #1f2937 !important; /* text-gray-800 */
+            }
+            #resultSection .value-text {
+                 color: #111827 !important; /* text-gray-900 or darker for clarity */
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-gray-800 flex flex-col items-center min-h-screen p-4 sm:p-8">
+
+    <div class="w-full max-w-2xl bg-white shadow-xl rounded-lg p-6 sm:p-10">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl sm:text-4xl font-bold text-sky-600">정서 4분면 마음 편지</h1>
+            <p class="text-gray-600 mt-2">나의 감정을 돌아보고, 나에게 따뜻한 마음을 전해보세요.</p>
+        </header>
+
+        <section id="inputSection" class="space-y-6">
+            <div>
+                <label for="writerName" class="block text-lg font-semibold mb-2 text-gray-700">작성자 이름</label>
+                <p class="text-sm text-gray-500 mb-2">이름을 입력해주세요.</p>
+                <input type="text" id="writerName" name="writer_name" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition" placeholder="예: 홍길동">
+            </div>
+
+            <div>
+                <label for="themeSelector" class="block text-lg font-semibold mb-2 text-gray-700">편지지 테마 선택</label>
+                <p class="text-sm text-gray-500 mb-2">결과 카드의 분위기를 선택해주세요.</p>
+                <select id="themeSelector" name="theme" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition">
+                    <option value="rose">포근한 장미 (기본)</option>
+                    <option value="forest">차분한 숲</option>
+                    <option value="sunshine">발랄한 햇살</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="emotionSelect" class="block text-lg font-semibold mb-2 text-gray-700">1. 오늘의 감정</label>
+                <p class="text-sm text-gray-500 mb-2">지금 어떤 감정을 느끼고 있나요? 목록에서 선택하거나 직접 입력해주세요.</p>
+                <select id="emotionSelect" name="emotion" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition">
+                    <option value="">-- 감정을 선택하세요 --</option>
+                    <option value="기쁨">기쁨 😊</option>
+                    <option value="슬픔">슬픔 😢</option>
+                    <option value="분노">분노 😠</option>
+                    <option value="평온">평온 😌</option>
+                    <option value="불안">불안 😟</option>
+                    <option value="신남">신남 🥳</option>
+                    <option value="실망">실망 😞</option>
+                    <option value="자신감">자신감 😎</option>
+                    <option value="감사">감사 🙏</option>
+                    <option value="기타">기타 (직접 입력)</option>
+                </select>
+                <input type="text" id="emotionCustom" name="emotion_custom" class="w-full p-3 border border-gray-300 rounded-md shadow-sm mt-2 hidden focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition" placeholder="감정을 직접 입력하세요">
+            </div>
+
+            <div>
+                <h2 class="block text-lg font-semibold mb-2 text-gray-700">2. 감정 4분면 선택</h2>
+                <p class="text-sm text-gray-500 mb-3">선택한 감정은 어떤 에너지와 방향을 가지고 있나요? 해당하는 영역을 클릭하세요.</p>
+                <div class="grid grid-cols-2 gap-2 sm:gap-4" id="emotionQuadrant">
+                    <div data-quadrant="높은 에너지 & 긍정적 감정" class="quadrant-item h-28 sm:h-32 flex flex-col items-center justify-center text-center p-3 bg-orange-200 rounded-lg cursor-pointer hover:bg-orange-300 transition duration-150 ease-in-out">
+                        <span class="font-semibold text-orange-800">높은 에너지 & 긍정</span>
+                        <span class="text-xs text-orange-700 mt-1">(예: 신남, 기쁨, 설렘)</span>
+                    </div>
+                    <div data-quadrant="높은 에너지 & 부정적 감정" class="quadrant-item h-28 sm:h-32 flex flex-col items-center justify-center text-center p-3 bg-red-200 rounded-lg cursor-pointer hover:bg-red-300 transition duration-150 ease-in-out">
+                        <span class="font-semibold text-red-800">높은 에너지 & 부정</span>
+                        <span class="text-xs text-red-700 mt-1">(예: 분노, 불안, 초조)</span>
+                    </div>
+                    <div data-quadrant="낮은 에너지 & 긍정적 감정" class="quadrant-item h-28 sm:h-32 flex flex-col items-center justify-center text-center p-3 bg-green-200 rounded-lg cursor-pointer hover:bg-green-300 transition duration-150 ease-in-out">
+                        <span class="font-semibold text-green-800">낮은 에너지 & 긍정</span>
+                        <span class="text-xs text-green-700 mt-1">(예: 평온, 안정, 만족)</span>
+                    </div>
+                    <div data-quadrant="낮은 에너지 & 부정적 감정" class="quadrant-item h-28 sm:h-32 flex flex-col items-center justify-center text-center p-3 bg-blue-200 rounded-lg cursor-pointer hover:bg-blue-300 transition duration-150 ease-in-out">
+                        <span class="font-semibold text-blue-800">낮은 에너지 & 부정</span>
+                        <span class="text-xs text-blue-700 mt-1">(예: 슬픔, 무기력, 지루함)</span>
+                    </div>
+                </div>
+                <input type="hidden" id="selectedQuadrant" name="selected_quadrant">
+            </div>
+
+            <div>
+                <label for="positiveAction" class="block text-lg font-semibold mb-2 text-gray-700">3. 긍정적 행동 전략</label>
+                <p class="text-sm text-gray-500 mb-2">이 감정을 더 긍정적으로 만들기 위해 지금 당장 할 수 있는 한 가지 행동은 무엇인가요?</p>
+                <input type="text" id="positiveAction" name="positive_action" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition" placeholder="예: 좋아하는 음악 듣기, 산책하기">
+            </div>
+
+            <div>
+                <label for="mindLetter" class="block text-lg font-semibold mb-2 text-gray-700">4. 나에게 보내는 마음 편지</label>
+                <p class="text-sm text-gray-500 mb-2">오늘 하루 수고한 나에게 짧은 편지를 써주세요. (50~100자 내외 권장)</p>
+                <textarea id="mindLetter" name="mind_letter" rows="4" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition" placeholder="예: 오늘도 정말 수고했어! 힘든 일이 있었지만 잘 해냈고, 내일은 더 좋은 일이 있을 거야."></textarea>
+            </div>
+
+            <button id="showResultBtn" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-4 rounded-md shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 no-print">
+                결과 보기
+            </button>
+        </section>
+
+        <section id="resultSection" class="mt-10 pt-8 border-t-2 hidden"> {/* 테마별 테두리 색상 위해 기본 테두리 제거 */}
+            {/* 테마별 클래스가 여기에 적용됨, 기본 레이아웃 클래스 유지 */}
+            <div id="resultCard" class="p-6 sm:p-8 rounded-xl shadow-2xl space-y-5 border"> 
+                <div class="text-center mb-8">
+                    <h2 id="resultMainTitle" class="text-2xl sm:text-3xl font-semibold mb-2"></h2>
+                    <p id="resultDate" class="text-sm text-gray-500"></p>
+                </div>
+                
+                <div>
+                    <p class="font-semibold text-gray-700 flex items-center label-text"><span class="text-xl mr-2">😊</span> 오늘의 감정:</p>
+                    <p id="resultEmotion" class="value-text text-gray-800 ml-8 mt-1 p-2 bg-white/70 rounded"></p>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-700 flex items-center label-text"><span class="text-xl mr-2">🎨</span> 선택한 4분면:</p>
+                    <p id="resultQuadrant" class="value-text text-gray-800 ml-8 mt-1 p-2 bg-white/70 rounded"></p>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-700 flex items-center label-text"><span class="text-xl mr-2">💡</span> 나의 행동 전략:</p>
+                    <p id="resultAction" class="value-text text-gray-800 ml-8 mt-1 p-2 bg-white/70 rounded"></p>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-700 flex items-center label-text"><span class="text-xl mr-2">💌</span> 나에게 보내는 마음 편지:</p>
+                    <p id="resultLetter" class="value-text text-gray-800 ml-8 mt-1 p-2 bg-white/70 rounded whitespace-pre-wrap"></p>
+                </div>
+            </div>
+
+            <div class="mt-8 text-center space-y-3 sm:space-y-0 sm:space-x-4 no-print">
+                <button id="printBtn" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-md shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                    인쇄 또는 PDF로 저장
+                </button>
+                <button id="resetBtn" class="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-md shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
+                    처음부터 다시 하기
+                </button>
+            </div>
+            <p class="text-sm text-gray-500 mt-4 text-center no-print">Tip: 인쇄 창에서 '대상'을 'PDF로 저장'으로 선택하면 파일로 저장할 수 있습니다. (단축키: Ctrl+P 또는 Cmd+P)</p>
+        </section>
+
+        <footer class="mt-12 text-center text-sm text-gray-500 no-print">
+            <p>&copy; <span id="currentYear"></span> 마음 편지 웹 학습지. Tailwind CSS & Vanilla JS.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const writerNameInput = document.getElementById('writerName');
+            const themeSelector = document.getElementById('themeSelector'); // 테마 선택기
+            const emotionSelect = document.getElementById('emotionSelect');
+            const emotionCustom = document.getElementById('emotionCustom');
+            const quadrantItems = document.querySelectorAll('.quadrant-item');
+            const selectedQuadrantInput = document.getElementById('selectedQuadrant');
+            const positiveActionInput = document.getElementById('positiveAction');
+            const mindLetterInput = document.getElementById('mindLetter');
+
+            const showResultBtn = document.getElementById('showResultBtn');
+            const resultSection = document.getElementById('resultSection');
+            const resultCard = document.getElementById('resultCard'); // 결과 카드
+            const printBtn = document.getElementById('printBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            
+            const resultMainTitle = document.getElementById('resultMainTitle');
+            const resultDateEl = document.getElementById('resultDate');
+            const resultEmotion = document.getElementById('resultEmotion');
+            const resultQuadrant = document.getElementById('resultQuadrant');
+            const resultAction = document.getElementById('resultAction');
+            const resultLetter = document.getElementById('resultLetter');
+            
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+            const themes = {
+                'rose': {
+                    cardBg: 'bg-rose-50', cardBorder: 'border-rose-200',
+                    titleColor: 'text-rose-500', nameEmphasisColor: 'text-amber-700',
+                    printClass: 'theme-rose'
+                },
+                'forest': {
+                    cardBg: 'bg-emerald-50', cardBorder: 'border-emerald-200',
+                    titleColor: 'text-emerald-600', nameEmphasisColor: 'text-teal-700',
+                    printClass: 'theme-forest'
+                },
+                'sunshine': {
+                    cardBg: 'bg-amber-50', cardBorder: 'border-amber-200',
+                    titleColor: 'text-orange-500', nameEmphasisColor: 'text-rose-600',
+                    printClass: 'theme-sunshine'
+                }
+            };
+            let currentThemeClasses = {}; // 현재 적용된 테마 클래스 저장용
+
+            function applyTheme(themeKey) {
+                const theme = themes[themeKey];
+                if (!theme) return;
+
+                // 이전 테마 클래스 제거
+                if (currentThemeClasses.cardBg) resultCard.classList.remove(currentThemeClasses.cardBg);
+                if (currentThemeClasses.cardBorder) resultCard.classList.remove(currentThemeClasses.cardBorder);
+                if (currentThemeClasses.titleColor) resultMainTitle.classList.remove(currentThemeClasses.titleColor);
+                if (currentThemeClasses.printClass) resultSection.classList.remove(currentThemeClasses.printClass);
+
+
+                // 새 테마 클래스 적용
+                resultCard.classList.add(theme.cardBg, theme.cardBorder);
+                resultMainTitle.classList.add(theme.titleColor);
+                resultSection.classList.add(theme.printClass); // 인쇄용 클래스
+
+                // 현재 테마 클래스 업데이트
+                currentThemeClasses = {
+                    cardBg: theme.cardBg,
+                    cardBorder: theme.cardBorder,
+                    titleColor: theme.titleColor,
+                    printClass: theme.printClass
+                };
+                return theme; // 적용된 테마 정보 반환
+            }
+            
+            // 초기 테마 적용 (페이지 로드 시 기본값)
+            applyTheme(themeSelector.value);
+
+
+            emotionSelect.addEventListener('change', function() {
+                emotionCustom.classList.toggle('hidden', this.value !== '기타');
+                if (this.value === '기타') emotionCustom.focus();
+                else emotionCustom.value = '';
+            });
+
+            let currentSelectedQuadrant = null;
+            quadrantItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    if (currentSelectedQuadrant) {
+                        currentSelectedQuadrant.classList.remove('quadrant-selected');
+                        currentSelectedQuadrant.classList.add('hover:bg-' + getBaseColor(currentSelectedQuadrant) + '-300');
+                    }
+                    this.classList.add('quadrant-selected');
+                    this.classList.remove('hover:bg-' + getBaseColor(this) + '-300');
+                    currentSelectedQuadrant = this;
+                    selectedQuadrantInput.value = this.dataset.quadrant;
+                });
+            });
+
+            function getBaseColor(element) {
+                const classList = element.classList;
+                if (classList.contains('bg-orange-200')) return 'orange';
+                if (classList.contains('bg-red-200')) return 'red';
+                if (classList.contains('bg-green-200')) return 'green';
+                if (classList.contains('bg-blue-200')) return 'blue';
+                return 'gray';
+            }
+
+            showResultBtn.addEventListener('click', function() {
+                const writerNameValue = writerNameInput.value.trim();
+                if (!writerNameValue) { alert("작성자 이름을 입력해주세요."); writerNameInput.focus(); return; }
+
+                let emotionValue = emotionSelect.value;
+                if (emotionValue === '기타') emotionValue = emotionCustom.value.trim() || "기타 (입력 없음)";
+                else if (!emotionValue) { alert("오늘의 감정을 선택하거나 입력해주세요."); emotionSelect.focus(); return; }
+
+                const quadrantValue = selectedQuadrantInput.value;
+                if (!quadrantValue) { alert("감정 4분면을 선택해주세요."); document.getElementById('emotionQuadrant').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+
+                const actionValue = positiveActionInput.value.trim();
+                if (!actionValue) { alert("긍정적 행동 전략을 입력해주세요."); positiveActionInput.focus(); return; }
+                
+                const letterValue = mindLetterInput.value.trim();
+                if (!letterValue) { alert("나에게 보내는 마음 편지를 작성해주세요."); mindLetterInput.focus(); return; }
+                
+                const today = new Date();
+                const formattedDate = `${today.getFullYear()}년 ${String(today.getMonth() + 1).padStart(2, '0')}월 ${String(today.getDate()).padStart(2, '0')}일`;
+
+                const selectedThemeKey = themeSelector.value;
+                const currentThemeDetails = applyTheme(selectedThemeKey); // 테마 적용 및 상세 정보 가져오기
+
+                resultMainTitle.innerHTML = `오늘, <span class="font-bold ${currentThemeDetails.nameEmphasisColor} emphasized-name">${writerNameValue}</span>님의 마음 이야기 ✨`;
+                resultDateEl.textContent = formattedDate;
+                resultEmotion.textContent = emotionValue;
+                resultQuadrant.textContent = quadrantValue;
+                resultAction.textContent = actionValue;
+                resultLetter.textContent = letterValue;
+
+                // 결과 섹션 상단 테두리 색상 동적 적용
+                resultSection.classList.remove('border-sky-100', 'border-rose-200', 'border-emerald-200', 'border-amber-200'); // 기존 테두리 색상 모두 제거
+                resultSection.classList.add(currentThemeDetails.cardBorder.replace('border-', 'border-t-')); // 상단 테두리만 적용 (예: border-rose-200 -> border-t-rose-200)
+
+
+                resultSection.classList.remove('hidden');
+                resultSection.scrollIntoView({ behavior: 'smooth' });
+            });
+
+            printBtn.addEventListener('click', () => window.print());
+
+            resetBtn.addEventListener('click', function() {
+                writerNameInput.value = '';
+                themeSelector.value = 'rose'; // 기본 테마로 리셋
+                applyTheme('rose'); // 테마 스타일 리셋
+                emotionSelect.value = '';
+                emotionCustom.value = '';
+                emotionCustom.classList.add('hidden');
+                
+                if (currentSelectedQuadrant) {
+                    currentSelectedQuadrant.classList.remove('quadrant-selected');
+                    currentSelectedQuadrant.classList.add('hover:bg-' + getBaseColor(currentSelectedQuadrant) + '-300');
+                    currentSelectedQuadrant = null;
+                }
+                selectedQuadrantInput.value = '';
+                positiveActionInput.value = '';
+                mindLetterInput.value = '';
+                
+                resultMainTitle.innerHTML = ''; 
+                resultDateEl.textContent = '';
+                resultSection.classList.add('hidden');
+                writerNameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+        });
+    </script>
+</body>
+</html>
